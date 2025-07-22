@@ -24,6 +24,7 @@ yarn-error.log*     # Yarn error logs
 # Editor directories and files
 .idea/              # JetBrains IDE
 .vscode/            # VS Code settings
+ai_rules/           # AI Rules
 *.suo               # Windows user options
 *.ntvs*             # NTVS files
 *.njsproj           # NTVS project files
@@ -31,6 +32,7 @@ yarn-error.log*     # Yarn error logs
 *.sw?               # Swap files
 .DS_Store           # macOS system files
 Thumbs.db           # Windows thumbnail cache
+Next.md
 
 # Testing
 coverage/           # Test coverage reports
