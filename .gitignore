@@ -1,0 +1,67 @@
+# Dependency directories
+node_modules/       # Node.js dependencies
+jspm_packages/      # JSPM package manager
+bower_components/   # Bower components
+
+# Build outputs
+/dist/              # Production build files
+/build/             # Build output directory
+*.min.js            # Minified JavaScript files
+*.min.css           # Minified CSS files
+
+# Environment variables
+.env                # Local environment variables
+.env.local          # Local overrides
+.env.*.local        # Environment-specific overrides
+
+# Logs
+logs                # Log files
+*.log               # Log files
+npm-debug.log*      # npm debug logs
+yarn-debug.log*     # Yarn debug logs
+yarn-error.log*     # Yarn error logs
+
+# Editor directories and files
+.idea/              # JetBrains IDE
+.vscode/            # VS Code settings
+*.suo               # Windows user options
+*.ntvs*             # NTVS files
+*.njsproj           # NTVS project files
+*.sln               # Visual Studio solution files
+*.sw?               # Swap files
+.DS_Store           # macOS system files
+Thumbs.db           # Windows thumbnail cache
+
+# Testing
+coverage/           # Test coverage reports
+.nyc_output/        # NYC test coverage
+test.js
+response.json
+sampleResponse.json
+
+# Local development
+.cache/             # Build cache
+.temp/              # Temporary files
+.tmp/               # Temporary files
+.sass-cache/        # SASS cache
+*.sublime-*         # Sublime Text files
+
+# Package files
+package-lock.json   # NPM lock file (optional - some teams commit this)
+yarn.lock           # Yarn lock file (optional - some teams commit this)
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Optional package.json
+# Uncomment if you want to ignore package.json
+# package.json

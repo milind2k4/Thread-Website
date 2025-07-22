@@ -36,6 +36,8 @@ export class PostParser {
         
         return commentsData.data.children
             .filter(child => child.kind === 't1') // t1 is a comment
+            //TODO: Implement Source Material Corner
+            .slice(1) // Remove the first comment (AutoModerator, Source Material Corner)
             .map(node => this.parseCommentNode(node))
             .filter(Boolean); // Remove any null/undefined comments
     }
