@@ -1,0 +1,81 @@
+/* Results Container */
+.results-container {
+  background: var(--dark-bg);
+  padding: 2rem;
+  border-radius: var(--border-radius-lg);
+  box-shadow: 4px 4px 6px var(--shadow);
+  margin-bottom: 2rem;
+  margin-top: 2rem;
+  background: var(--dark-bg);
+  transition: background-color var(--transition-normal);
+  min-height: 200px;
+}
+
+.results-container:hover {
+  background-color: var(--dark-bg-hover);
+}
+
+/* Center the h2 */
+.results-container h2 {
+  text-align: left;
+  margin-bottom: 1.5rem;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+}
+
+.empty-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+  color: var(--text-light);
+  margin: 0.5rem 0;
+}
+
+.empty-state p {
+  color: var(--text-muted);
+  margin: 0;
+}
+
+
+/* Loading State */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 1rem;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  border-top-color: var(--blue-accent);
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-text {
+  color: var(--text-muted);
+  margin: 1rem 0 0;
+  font-size: 1.1rem;
+}

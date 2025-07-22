@@ -1,0 +1,119 @@
+.history-container {
+  position: relative;
+  display: inline-block;
+}
+
+.history-button {
+  background: var(--dark-bg-hover);
+  color: var(--white);
+  border: 1px solid var(--border-color);
+  margin-right: 2rem;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.history-button:hover {
+  background: var(--dark-bg);
+}
+
+.history-dropdown {
+  position: absolute;
+  right: 56.5%;
+  top: 100%;
+  margin-top: 1.2rem;
+  margin-bottom: 8px;
+  width: 300px;
+  max-height: 400px;
+  background: rgba(24, 28, 31, 0.5);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  display: none;
+  flex-direction: column;
+  z-index: 1000;
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
+.history-container.visible .history-dropdown {
+  display: flex;
+}
+
+.history-dropdown::before {
+  content: "";
+  position: absolute;
+  top: -16px;
+  right: 60px;
+  width: 0;
+  height: 0;
+  border-left: 16px solid transparent;
+  border-right: 16px solid transparent;
+  border-bottom: 16px solid rgba(24, 28, 31, 0.5);
+  filter: drop-shadow(0 4px 12px var(--shadow));
+}
+
+.history-header {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-header h4 {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.clear-history {
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.clear-history:hover {
+  text-decoration: underline;
+}
+
+.history-items {
+  overflow-y: auto;
+  max-height: 350px;
+}
+
+.history-item {
+  font-size: 0.7rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: background 0.2s ease, background-color 0.2s ease;
+}
+
+.history-item:active {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(2px);
+}
+
+
+.history-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.history-item:last-child {
+  border-bottom: none;
+}
+
+.history-item-title {
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.history-item-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.5rem;
+  color: var(--text-muted);
+}

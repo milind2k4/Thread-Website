@@ -1,0 +1,209 @@
+/* Form container */
+.search-container {
+  background-color: var(--dark-bg);
+  padding: 1.5rem;
+  border-radius: var(--border-radius-lg);
+  box-shadow: 4px 4px 6px var(--shadow);
+  margin-bottom: 2rem;
+  transition: height 0.3s ease-in-out, padding 0.3s ease-in-out,
+    background-color 0.3s;
+}
+
+.search-container:hover {
+  background-color: var(--dark-bg-hover);
+}
+
+/* Form elements */
+#searchForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+#englishTitle,
+#episodeNo {
+    transition: opacity 0.3s;
+}
+
+#englishTitle::placeholder,
+#episodeNo::placeholder {
+    color: var(--text-muted);  /* Match your theme's muted text color */
+    opacity: 0.6;              /* Slightly transparent */
+    font-style: italic;        /* Optional: make it italic */
+}
+
+/* Ensure consistent styling when focused */
+#englishTitle:focus::placeholder,
+#episodeNo:focus::placeholder {
+    opacity: 0.3;  /* Make more transparent when focused */
+}
+
+
+.form-row {
+  display: flex;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.form-actions {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1rem;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.form-group {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 0.95rem;
+  margin-bottom: 0.2rem;
+}
+
+input[type="text"],
+input[type="number"] {
+  width: 100%;
+  padding: 0.8rem;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: var(--border-radius-md);
+  color: var(--text-light);
+  font-size: 1rem;
+  max-width: 400px;
+  transition: border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus {
+  outline: none;
+  border-color: var(--reddit-orange);
+  box-shadow: 0 0 0 2px var(--shadow-orange);
+}
+
+input[type="text"]:hover,
+input[type="number"]:hover {
+  outline: none;
+  border-color: var(--white);
+  box-shadow: 0 0 0 2px var(--shadow-light);
+}
+
+button {
+  background: var(--blue-accent);
+  color: var(--white);
+  border: none;
+  padding: 0.8rem 1.8rem;
+  border-radius: var(--border-radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+  margin-top: 1rem;
+}
+
+.search-button:hover {
+  background: var(--blue-hover);
+}
+
+.button-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.spinner-button {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--white);
+  border-radius: 50%;
+  border-top-color: var(--blue-hover);
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.form-loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Error Messages */
+.error-container {
+  margin-top: 1rem;
+  background-color: var(--dark-bg);
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-in;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out,
+    transform 0.3s ease-in-out;
+}
+
+.error-container.has-error {
+  max-height: 200px;
+  opacity: 1;
+  transform: translate(0);
+}
+
+.search-container.has-error {
+  padding-bottom: 1rem;
+}
+
+.error-message {
+  color: var(--error-red);
+  margin: 0;
+  padding: 0.75rem 1rem;
+  background-color: var(--error-bg);
+  border-left: 3px solid var(--error-red);
+  border-radius: 0 4px 4px 0;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Icon styling */
+.error-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 0.1em;
+}
+
+/* Make the SVG icon inherit the error color */
+.error-icon img {
+  width: 22px;
+  height: 22px;
+}
+
+/* Text styling */
+.error-text {
+  line-height: 1.9;
+  padding-right: 0.9rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 400px) {
+  .form-row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
