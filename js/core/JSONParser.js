@@ -45,10 +45,23 @@ export class JSONParser {
   }
 
   static parseCommentNode(node, depth = 0) {
-    if (!node?.data || !(node.kind === "t1" || node.kind === "more"))
-      return null;
+    // Only process actual comments (t1). Ignore 'more' nodes for now.
+    if (!node?.data || node.kind !== "t1") return null;
 
     const comment = node.data;
+
+    // Recursively parse replies first
+    const replies =
+      comment.replies?.data?.children
+        ?.map((reply) => this.parseCommentNode(reply, depth + 1))
+        .filter(Boolean) || [];
+
+    // Filter out deleted comments ONLY if they have no replies
+    // Reddit usually sets author to "[deleted]" and body to "[deleted]" or "[removed]"
+    if (comment.author === "[deleted]" && replies.length === 0) {
+      return null;
+    }
+
     return {
       id: comment.id,
       author: comment.author,
@@ -56,10 +69,7 @@ export class JSONParser {
       created: new Date(comment.created_utc * 1000),
       depth: depth,
       content: comment.body_html ? this.decodeHtml(comment.body_html) : "",
-      replies:
-        comment.replies?.data?.children
-          ?.map((reply) => this.parseCommentNode(reply, depth + 1))
-          .filter(Boolean) || [],
+      replies: replies,
     };
   }
 
