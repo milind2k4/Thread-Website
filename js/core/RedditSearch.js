@@ -1,93 +1,91 @@
+// js/core/RedditSearch.js
 /**
- * Sevice for searching Reddit threads
+ * Service for searching r/anime episode-discussion threads and loading comments
+ * without requiring Reddit OAuth. Uses public JSON endpoints (CORS-enabled).
  */
 
 export class RedditSearch {
     constructor() {
-        this.baseURL = 'https://www.reddit.com/r/anime/search.json';
-        this.cache = new Map()
+        /** search cache: title|ep -> Thread[] */
+        this.cache = new Map();
+        /** post cache: id -> post data */
+        this.postCache = new Map();
     }
 
     /**
-     * Search Reddit for anime discussion threads
-     * @param {string} title - Anime title
-     * @param {number} episode - Episode number
-     * @param {string} [sort='relevance'] - Sort method: 'relevance', 'new', 'top', 'comments'
-     * @returns {Promise<Array<Post>>} Array of matching threads
+     * Internal helper – simple GET request to reddit.com returning parsed JSON.
+     * @param {string} url fully-qualified reddit URL
+     * @returns {Promise<any>} parsed JSON
      */
-    async searchThread(title, episode, sort = 'relevance') {
-        const cacheKey = `${title}-${episode}-${sort}`;
+    async #get(url) {
+        const res = await fetch(url, {
+            headers: { 'User-Agent': 'ThreadWebsite/1.0 (unauth)' }
+        });
 
-        if (this.cache.has(cacheKey)) {
-            return this.cache.get(cacheKey);
-        }
 
-        try {
-            const query = `${title} - "Episode ${episode}" discussion author:AutoLovepon`
-
-            const url = new URL(this.baseURL);
-            url.searchParams.append('q', query);
-            url.searchParams.append('restrict_sr', 'on');
-            url.searchParams.append('sort', sort);
-            url.searchParams.append('limit', '10');
-            url.searchParams.append('type', 'link');
-
-            const response = await fetch(url.toString());
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            const threads = this.#processRedditResponse(data);
-
-            this.cache.set(cacheKey, threads);
-            // console.log(`Search URL: ${url.toString()}`);
-
-            return threads;
-
-        } catch (error){
-            console.error('Error searching Reddit:', error);
-            throw new Error('Failed to search Reddit');
-        }
+        if (!res.ok) throw new Error(`Reddit request failed: ${res.status}`);
+        return res.json();
     }
 
-
     /**
-     * Process Reddit response data
-     * @private
-     * @param {Object} response - Reddit API response
-     * @returns {Array} Array of processed threads
+     * Search r/anime for the episode-discussion thread.
+     * @param {string} title   anime title (EN)
+     * @param {number|string} episode episode number
+     * @param {number} limit   results to return (default 5)
+     * @returns {Promise<Thread[]>}
      */
-    #processRedditResponse(response) {
-        if (!response?.data?.children) return [];
+    async searchThreads(title, episode, limit = 5) {
+        const key = `${title}|${episode}|${limit}`;
+        if (this.cache.has(key)) return this.cache.get(key);
+
+        const query = `"${title}" "Episode ${episode}" discussion`;
+
+        const root = '/reddit';
+        const url = `${root}/r/anime/search.json?q=${encodeURIComponent(query)}&restrict_sr=on&sort=relevance&limit=${limit}&type=link`;
         
-        return response.data.children
-            .map(post => ({
-                id: post.data.id,
-                title: post.data.title,
-                author: post.data.author,
-                score: post.data.score,
-                created: new Date(post.data.created_utc * 1000),
-                commentCount: post.data.num_comments,
-                url: `https://reddit.com${post.data.permalink}`,
-            }));
+        const raw = await this.#get(url);
+        const threads = this.#parseThreads(raw);
+        this.cache.set(key, threads);
+        return threads;
+    }
+    
+    /**
+     * Fetch raw listing data for a thread.
+     * @param {string} permalink reddit url (e.g. https://reddit.com/r/anime/comments/…)
+     * @param {number} limit comments to fetch (default 50)
+     * @returns {Promise<Array<Post, Comments>}
+    */
+   async fetchPostAndComments(permalink, limit = 50) {
+        const root = '/reddit';
+        const url = `${root}${permalink}.json`;
+        return this.#get(url);
+    }
+
+
+    /* -------------------------- helpers -------------------------------- */
+    #parseThreads(raw) {
+        if (!raw?.data?.children) return [];
+        return raw.data.children.map(p => ({
+            id: p.data.id,
+            title: p.data.title,
+            author: p.data.author,
+            score: p.data.score,
+            created: new Date(p.data.created_utc * 1000),
+            commentCount: p.data.num_comments,
+            permalink: p.data.permalink,
+            url: `https://reddit.com${p.data.permalink}`
+        }));
     }
 }
 
-
 /**
- * Type Definitions for Documentation
- */
-
-/**
- * Reddit Thread
  * @typedef {Object} Thread
- * @property {string} id - Thread ID
- * @property {string} title - Thread title
- * @property {string} author - Thread author
- * @property {number} score - Thread score
- * @property {Date} created - Thread creation date
- * @property {number} commentCount - Number of comments
- * @property {string} url - Thread URL
+ * @property {string} id
+ * @property {string} title
+ * @property {string} author
+ * @property {number} score
+ * @property {Date}   created
+ * @property {number} commentCount
+ * @property {string} permalink
+ * @property {string} url
  */

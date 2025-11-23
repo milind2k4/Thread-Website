@@ -1,132 +1,154 @@
-import { FormInput } from "./components/FormInput.js";
-import { LoadingState } from "./components/LoadingState.js";
-import { SearchHistory } from "./components/SearchHistory.js";
-import { toTitleCase } from "./core/Utility.js";
+// js/app.js
+// ============================================================================
+// Main front-end script: handles user input, searches r/anime for the episode
+// discussion thread, fetches its comments, and renders them.
+// The flow is completely unauthenticated – it relies on Reddit's public JSON
+// endpoints, which are CORS-enabled for GET requests.
+// ============================================================================
 
+// --------------------------- Imports ---------------------------------------
+import { FormInput } from "./components/FormInput.js"; // Form UX
+import { LoadingState } from "./components/LoadingState.js"; // Loading / results UI
+import { SearchHistory } from "./components/SearchHistory.js"; // Local search history
+import { toTitleCase } from "./core/Utility.js"; // Small helper
+import { RedditSearch } from "./core/RedditSearch.js"; // Service we rewrote
+import { JSONParser } from "./core/JSONParser.js"; // Converts Reddit JSON → nested comments
+import { CommentRenderer } from "./components/CommentRenderer.js"; // Renders nested comments
+
+// --------------------------- DOM Ready -------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
-    const formInput = new FormInput();
-    formInput.init();
-    const loadingState = new LoadingState();
-    const searchHistory = new SearchHistory();
+  //--------------------------------------------------------------------------
+  // 1. Instantiate helpers / grab DOM nodes
+  //--------------------------------------------------------------------------
+  const formInput = new FormInput();
+  formInput.init();
+  const loadingState = new LoadingState();
+  const searchHistory = new SearchHistory();
+  const reddit = new RedditSearch();
 
+  // Cache frequently-accessed nodes
+  const historyBtn = document.getElementById("historyButton");
+  const historyWrapper = document.getElementById("historyContainer");
+  const historyItems = document.getElementById("historyItems");
+  const clearHistoryBtn = document.getElementById("clearHistory");
+  const commentContainer = document.getElementById("discussionResults");
+  const titleInput = document.getElementById("englishTitle");
+  const episodeInput = document.getElementById("episodeNo");
+  const searchForm = document.getElementById("searchForm");
 
-    /**
-     * Search History
-     */
-    const historyButton = document.getElementById("historyButton");
-    const historyContainer = document.getElementById("historyContainer");
-    const historyItems = document.getElementById("historyItems");
-    const clearHistory = document.getElementById("clearHistory");
+  // History dropdown behaviour
+  historyBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    historyWrapper.classList.toggle("visible");
+    if (historyWrapper.classList.contains("visible")) {
+      searchHistory.renderHistory(historyItems);
+    }
+  });
 
-    // History button
-    historyButton.addEventListener("click", (event) => {
-        event.stopPropagation();
-        historyContainer.classList.toggle("visible");
-        if (historyContainer.classList.contains('visible')) {
-            searchHistory.renderHistory(historyItems);
-        }
-    });
+  clearHistoryBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    searchHistory.clearHistory();
+    searchHistory.renderHistory(historyItems);
+  });
 
-    // Clear history
-    clearHistory.addEventListener("click", (event) => {
-        event.stopPropagation();
-        searchHistory.clearHistory();
-        searchHistory.renderHistory(historyItems);
-    });
+  // Close dropdown when clicking outside of it
+  document.addEventListener("click", (e) => {
+    if (!historyWrapper.contains(e.target))
+      historyWrapper.classList.remove("visible");
+  });
 
-    // Close history dropdown when clicking outside
-    document.addEventListener("click", (event) => {
-        if (!historyContainer.contains(event.target)) {
-            historyContainer.classList.remove("visible");
-        }
-    });
+  // When a user clicks a previous search, autofill and resubmit
+  searchHistory.setOnItemClick((title, ep) => {
+    titleInput.value = title;
+    episodeInput.value = ep || "";
+    searchForm.dispatchEvent(new Event("submit", { cancelable: true }));
+    historyWrapper.classList.remove("visible");
+  });
 
-    // History Item Click
-    const dropdown = historyContainer.querySelector('.history-dropdown');
-    if (dropdown) {
-        dropdown.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
+  //--------------------------------------------------------------------------
+  // 3. Input helpers (masking & auto-capitalisation)
+  //--------------------------------------------------------------------------
+  // Episode: allow only 1-3 digit numbers (no leading zeros)
+  episodeInput.placeholder = "e.g. 5";
+  episodeInput.addEventListener("input", (e) => {
+    const numeric = e.target.value.replace(/\D/g, "").replace(/^0+/, "");
+    if (numeric !== e.target.value) e.target.value = numeric.slice(0, 3);
+  });
+
+  // Title: title-case while preserving cursor position
+  titleInput.addEventListener("input", (e) => {
+    const pos = e.target.selectionStart;
+    e.target.value = toTitleCase(e.target.value);
+    e.target.setSelectionRange(pos, pos);
+  });
+
+  //--------------------------------------------------------------------------
+  // 4. Main search handler – FormInput dispatches a custom `searchSubmitted`
+  //--------------------------------------------------------------------------
+  searchForm.addEventListener("searchSubmitted", async (evt) => {
+    const { engTitle, episode } = evt.detail; // Provided by FormInput
+
+    // ---- UI: start spinner & save history
+    loadingState.showLoading();
+    searchHistory.addSearch(engTitle, episode);
+    if (historyWrapper.classList.contains("visible")) {
+      searchHistory.renderHistory(historyItems);
     }
 
-    searchHistory.setOnItemClick((searchTerm, episode) => {
-        // Fill the form with the clicked search
-        document.getElementById('englishTitle').value = searchTerm;
-        if (episode) {
-            document.getElementById('episodeNo').value = episode;
+    try {
+      // -------------------------------------------------------------------
+      // 4.1 Search for the discussion thread (top result is usually correct)
+      // -------------------------------------------------------------------
+      const threads = await reddit.searchThreads(engTitle, episode, 10);
+      if (!threads.length) {
+        loadingState.stopLoading(
+          true,
+          "No results",
+          "Try a different search term"
+        );
+        return;
+      }
+
+      // Heuristic: If user didn't type "Season", prefer threads that don't satisfy /Season \d+/
+      let thread = threads[0];
+      const userHasSeason = engTitle.toLowerCase().includes("season");
+
+      if (!userHasSeason) {
+        const seasonRegex = /season\s*\d+/i;
+        const nonSeasonThreads = threads.filter(
+          (t) => !seasonRegex.test(t.title)
+        );
+        if (nonSeasonThreads.length > 0) {
+          thread = nonSeasonThreads[0];
         }
+      }
 
-        document.getElementById('searchForm').dispatchEvent(new Event('submit', { cancelable: true }));
+      console.log("Selected thread:", thread);
 
-        historyContainer.classList.remove('visible');
-    });
+      const postAndComments = await reddit.fetchPostAndComments(
+        thread.permalink
+      );
+      console.log(postAndComments);
 
-    /**
-     * Search Form
-     */
-    // Episode number input masking
-    const episodeInput = document.getElementById('episodeNo');
-    if (episodeInput) {
+      // -------------------------------------------------------------------
+      // 4.2 Fetch full listing (post + comments) – Reddit returns an array
+      //     [0]=submission, [1]=comments listing
+      // -------------------------------------------------------------------
+      const parsedPost = JSONParser.parsePost(postAndComments);
+      console.log(parsedPost);
 
-        episodeInput.placeholder = 'e.g. ep 5';
-        // Prevent non-numeric input
-        episodeInput.addEventListener('input', (e) => {
-            const value = e.target.value;
-
-            if (!value) {
-                e.target.value = '';
-                return;
-            }
-
-            const numericValue = value
-                .replace(/\D/g, '')      // Remove non-digits
-                .replace(/^0+/, '');     // Remove leading zeros
-
-
-            if (numericValue !== value) {
-                e.target.value = numericValue.slice(0, 3);  // Limit to 3 digits
-            }
-        });
+      // -------------------------------------------------------------------
+      // 4.3 Render comments
+      // -------------------------------------------------------------------
+      CommentRenderer.render(commentContainer, parsedPost.comments);
+      loadingState.showResults();
+    } catch (err) {
+      console.error("Search error", err);
+      loadingState.stopLoading(
+        true,
+        "Error",
+        "Could not load comments – please retry."
+      );
     }
-
-    // Auto capitalize the title
-    const titleInput = document.getElementById('englishTitle');
-    if (titleInput) {
-        titleInput.addEventListener('input', (e) => {
-            // Get current cursor position
-            const cursorPosition = e.target.selectionStart;
-
-            e.target.value = toTitleCase(e.target.value);
-
-            // Restore cursor position
-            e.target.setSelectionRange(cursorPosition, cursorPosition);
-        });
-    }
-
-
-    document.getElementById("searchForm").addEventListener("searchSubmitted", (event) => {
-        const { engTitle, episode } = event.detail;
-        console.log(`Searching for: ${engTitle}, Episode: ${episode}`);
-
-        searchHistory.addSearch(engTitle, episode);
-
-        if (historyContainer.classList.contains('visible')) {
-            searchHistory.renderHistory(historyItems);
-        }
-
-        // Show loading state
-        loadingState.showLoading();
-
-        // After 3 seconds, show empty state
-        setTimeout(() => {
-            loadingState
-                .stopLoading(
-                    true,
-                    "No results found soso",
-                    "Try a different search term"
-                );
-
-            console.log("Showing empty state after loading");
-        }, 3000);
-    });
+  });
 });

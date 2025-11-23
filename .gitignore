@@ -51,6 +51,7 @@ sampleResponse.json
 # Package files
 package-lock.json   # NPM lock file (optional - some teams commit this)
 yarn.lock           # Yarn lock file (optional - some teams commit this)
+node_modules/
 
 # Optional npm cache directory
 .npm
