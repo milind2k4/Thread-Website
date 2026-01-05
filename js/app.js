@@ -138,9 +138,95 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log(parsedPost);
 
       // -------------------------------------------------------------------
-      // 4.3 Render comments
+      // 4.3 Render comments (Batch Rendering)
       // -------------------------------------------------------------------
-      CommentRenderer.render(commentContainer, parsedPost.comments);
+
+      // State for batch rendering
+      const allComments = parsedPost.comments;
+      let renderedCount = 0;
+      const BATCH_SIZE = 10;
+
+      // Clear container first
+      commentContainer.innerHTML = "";
+
+      // Handler for nested "Load More" buttons (API fetch)
+      const onLoadMore = async (moreNode, container) => {
+        console.log("Loading more comments...", moreNode);
+        const linkId = `t3_${parsedPost.id}`;
+        const response = await reddit.fetchMoreComments(
+          linkId,
+          moreNode.children
+        );
+
+        const things = response?.json?.data?.things || [];
+        if (!things.length) {
+          container.innerHTML =
+            '<div class="error">No more comments found.</div>';
+          return;
+        }
+
+        const parsedComments = JSONParser.parseComments({
+          data: { children: things },
+        });
+
+        container.innerHTML = "";
+        const list = document.createElement("div");
+        list.className = "replies-list";
+        parsedComments.forEach((comment) => {
+          list.appendChild(
+            CommentRenderer.createCommentElement(
+              comment,
+              moreNode.depth,
+              onLoadMore
+            )
+          );
+        });
+        container.appendChild(list);
+      };
+
+      // Function to render the next batch of top-level comments
+      const renderNextBatch = () => {
+        const batch = allComments.slice(
+          renderedCount,
+          renderedCount + BATCH_SIZE
+        );
+        if (batch.length === 0) return;
+
+        CommentRenderer.append(commentContainer, batch, onLoadMore);
+        renderedCount += batch.length;
+
+        // Handle "Load More Comments" button at the bottom
+        let loadMoreBtn = document.getElementById("main-load-more-btn");
+        if (loadMoreBtn) loadMoreBtn.remove();
+
+        if (renderedCount < allComments.length) {
+          loadMoreBtn = document.createElement("button");
+          loadMoreBtn.id = "main-load-more-btn";
+          loadMoreBtn.className = "load-more-btn main-load-more";
+          loadMoreBtn.textContent = `Load more comments (${
+            allComments.length - renderedCount
+          } remaining)`;
+          loadMoreBtn.style.display = "block";
+          loadMoreBtn.style.margin = "20px auto";
+
+          loadMoreBtn.addEventListener("click", () => {
+            loadMoreBtn.textContent = "Loading...";
+            // Small timeout to allow UI update
+            setTimeout(renderNextBatch, 10);
+          });
+
+          commentContainer.appendChild(loadMoreBtn);
+        }
+      };
+
+      // Initial Render
+      if (allComments.length === 0) {
+        commentContainer.innerHTML =
+          '<div class="no-comments">No comments yet</div>';
+      } else {
+        renderNextBatch();
+      }
+
       loadingState.showResults();
     } catch (err) {
       console.error("Search error", err);

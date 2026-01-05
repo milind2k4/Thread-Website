@@ -36,17 +36,29 @@ export class JSONParser {
 
     return (
       commentsData.data.children
-        .filter((child) => child.kind === "t1") // t1 is a comment
+        // We want to process both comments (t1) and load more (more)
+        .filter((child) => child.kind === "t1" || child.kind === "more")
         //TODO: Implement Source Material Corner
         .slice(1) // Remove the first comment (AutoModerator, Source Material Corner)
         .map((node) => this.parseCommentNode(node))
         .filter(Boolean)
-    ); // Remove any null/undefined comments
+    );
   }
 
   static parseCommentNode(node, depth = 0) {
-    // Only process actual comments (t1). Ignore 'more' nodes for now.
-    if (!node?.data || node.kind !== "t1") return null;
+    if (!node?.data) return null;
+
+    // Handle "load more" nodes
+    if (node.kind === "more") {
+      return {
+        kind: "more",
+        count: node.data.count,
+        children: node.data.children, // List of comment IDs to fetch
+        depth: depth,
+      };
+    }
+
+    if (node.kind !== "t1") return null;
 
     const comment = node.data;
 

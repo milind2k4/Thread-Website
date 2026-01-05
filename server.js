@@ -15,10 +15,37 @@ const PORT = 5050; // one port for both static + proxy
 //-----------------------------------------------------------------
 // 1. STATIC FILES  (http://localhost:5050/index.html)
 //-----------------------------------------------------------------
-// This assumes your static files are in the same root directory.
-// If they are in a subfolder (e.g., 'public'), you should change this to:
-// app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname)));
+
+//-----------------------------------------------------------------
+// 2. PROXY /reddit/... -> https://www.reddit.com/...
+//-----------------------------------------------------------------
+app.use("/reddit", async (req, res) => {
+  // req.url is the path relative to the mount point (/reddit)
+  // e.g. if original is /reddit/r/anime/..., req.url is /r/anime/...
+  const targetUrl = `https://www.reddit.com${req.url}`;
+
+  console.log(`[Proxy] ${req.method} ${req.originalUrl} -> ${targetUrl}`);
+
+  try {
+    const upstream = await fetch(targetUrl, {
+      headers: {
+        "User-Agent": "ThreadWebsite/1.0 (unauth)",
+      },
+    });
+
+    if (!upstream.ok) {
+      console.error(`[Proxy] Upstream error: ${upstream.status}`);
+      return res.status(upstream.status).send(await upstream.text());
+    }
+
+    const data = await upstream.json();
+    res.json(data);
+  } catch (err) {
+    console.error("[Proxy] Network error:", err);
+    res.status(500).json({ error: "Proxy failed", details: err.message });
+  }
+});
 
 //-----------------------------------------------------------------
 app.listen(PORT, () =>
