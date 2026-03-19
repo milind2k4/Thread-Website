@@ -8,6 +8,12 @@ bower_components/   # Bower components
 /build/             # Build output directory
 *.min.js            # Minified JavaScript files
 *.min.css           # Minified CSS files
+ai_rules/
+node_modules/
+
+todo.md 
+
+
 
 # Environment variables
 .env                # Local environment variables
