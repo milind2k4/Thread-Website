@@ -3,7 +3,6 @@
 //  • proxies any `/reddit/...` request to api.reddit.com with CORS enabled
 
 import express from "express";
-import fetch from "node-fetch";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
