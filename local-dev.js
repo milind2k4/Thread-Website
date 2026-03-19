@@ -1,4 +1,4 @@
-// server.js – single Express app that
+// local-dev.js – single Express app that
 //  • serves your static front-end (index.html, js/, css/, …)
 //  • proxies any `/reddit/...` request to api.reddit.com with CORS enabled
 
