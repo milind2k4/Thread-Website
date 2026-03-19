@@ -1,18 +1,9 @@
-# Dependency directories
-node_modules/       # Node.js dependencies
-jspm_packages/      # JSPM package manager
-bower_components/   # Bower components
-
-# Build outputs
-/dist/              # Production build files
-/build/             # Build output directory
-*.min.js            # Minified JavaScript files
-*.min.css           # Minified CSS files
+# 
 ai_rules/
 node_modules/
+.vscode/
 
 todo.md 
-
 
 
 # Environment variables
