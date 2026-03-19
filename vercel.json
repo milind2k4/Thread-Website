@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/reddit/:path*",
+      "destination": "/api/index.js?proxyPath=:path*"
+    },
+    {
+      "source": "/reddit",
+      "destination": "/api/index.js?proxyPath="
+    }
+  ]
+}

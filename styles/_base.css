@@ -1,0 +1,54 @@
+/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+/* Base size */
+html { font-size: 16px; }
+
+/* Larger screens */
+@media (min-width: 1200px) {
+    html { font-size: 18px; }
+}
+
+/* Smaller screens */
+@media (max-width: 768px) {
+    html { font-size: 14px; }
+}
+
+/* Set up the base font and colors */
+body {
+    font-family: Verdana, sans-serif;
+    line-height: 1.8;
+    color: var(--text-light);
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: var(--dark-bg);
+}
+
+
+/* Header styles */
+header {
+    text-align: center;
+    margin: 2rem 0;
+    border-bottom: 1px solid var(--input-border);
+}
+
+h1 {
+    font-family: "Varela Round";
+    font-weight: 500;
+    color: var(--reddit-orange);
+    font-size: 2.5rem;
+    margin-bottom: 0.6rem;
+}
+
+h2 {
+    font-family: "Varela Round";
+    color: var(--blue-accent);
+    font-size: 1.5rem;
+    margin-bottom: 1.6rem;
+}

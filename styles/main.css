@@ -1,0 +1,7 @@
+/* Main CSS file */
+@import '_variables.css';      /* No _ or .css */
+@import '_base.css';          /* Base styles and resets */
+@import 'components/_form.css'; /* Components */
+@import 'components/_footer.css';
+@import 'components/_results.css';
+@import 'components/_history.css';

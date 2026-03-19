@@ -1,0 +1,17 @@
+{
+  "name": "thread-website",
+  "type": "module",
+  "version": "1.0.0",
+  "main": "test.js",
+  "scripts": {
+    "dev": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "express": "^4.19.2",
+    "node-fetch": "^3.3.2"
+  }
+}
