@@ -1,52 +1,67 @@
-// local-dev.js – single Express app that
-//  • serves your static front-end (index.html, js/, css/, …)
-//  • proxies any `/reddit/...` request to api.reddit.com with CORS enabled
+import http from 'http';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-import express from "express";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { dirname } from "node:path";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const PORT = 5050;
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const app = express();
-const PORT = 5050; // one port for both static + proxy
+http.createServer(async (req, res) => {
+  let urlPath = req.url.split('?')[0];
 
-//-----------------------------------------------------------------
-// 1. STATIC FILES  (http://localhost:5050/index.html)
-//-----------------------------------------------------------------
-app.use(express.static(path.join(__dirname)));
-
-//-----------------------------------------------------------------
-// 2. PROXY /reddit/... -> https://www.reddit.com/...
-//-----------------------------------------------------------------
-app.use("/reddit", async (req, res) => {
-  // req.url is the path relative to the mount point (/reddit)
-  // e.g. if original is /reddit/r/anime/..., req.url is /r/anime/...
-  const targetUrl = `https://www.reddit.com${req.url}`;
-
-  console.log(`[Proxy] ${req.method} ${req.originalUrl} -> ${targetUrl}`);
-
-  try {
-    const upstream = await fetch(targetUrl, {
-      headers: {
-        "User-Agent": "ThreadWebsite/1.0 (unauth)",
-      },
-    });
-
-    if (!upstream.ok) {
-      console.error(`[Proxy] Upstream error: ${upstream.status}`);
-      return res.status(upstream.status).send(await upstream.text());
+  // Proxy /reddit
+  if (urlPath.startsWith('/reddit')) {
+    const redditPath = urlPath.replace('/reddit', '');
+    const queryPart = req.url.substring(urlPath.length);
+    const targetUrl = `https://www.reddit.com${redditPath}${queryPart}`;
+    console.log(`[Proxy] Routing ${req.method} to -> ${targetUrl}`);
+    
+    try {
+      const upstream = await fetch(targetUrl, {
+        method: req.method,
+        headers: { 'User-Agent': 'ThreadWebsite/1.0 (unauth)' }
+      });
+      res.writeHead(upstream.status, { 'Content-Type': upstream.headers.get('content-type') || 'application/json' });
+      res.end(await upstream.text());
+    } catch(err) {
+      console.error(err);
+      res.writeHead(500); res.end('Proxy failed');
     }
-
-    const data = await upstream.json();
-    res.json(data);
-  } catch (err) {
-    console.error("[Proxy] Network error:", err);
-    res.status(500).json({ error: "Proxy failed", details: err.message });
+    return;
   }
-});
 
-//-----------------------------------------------------------------
-app.listen(PORT, () =>
-  console.log(`Dev server running at http://localhost:${PORT}`)
-);
+  // Static file server
+  if (urlPath === '/') urlPath = '/index.html';
+  const filePath = path.join(__dirname, urlPath);
+  const extname = String(path.extname(filePath)).toLowerCase();
+  const mimeTypes = {
+    '.html': 'text/html',
+    '.js': 'text/javascript',
+    '.css': 'text/css',
+    '.json': 'application/json',
+    '.png': 'image/png',
+    '.jpg': 'image/jpg',
+    '.gif': 'image/gif',
+    '.svg': 'image/svg+xml'
+  };
+  const contentType = mimeTypes[extname] || 'application/octet-stream';
+
+  fs.readFile(filePath, (error, content) => {
+    if (error) {
+       if (error.code === 'ENOENT') {
+           res.writeHead(404);
+           res.end('Cannot GET ' + req.url); // match the old Express error text so tests don't break
+       } else {
+           res.writeHead(500);
+           res.end('Server Error: ' + error.code);
+       }
+    } else {
+        res.writeHead(200, { 'Content-Type': contentType });
+        res.end(content, 'utf-8');
+    }
+  });
+
+}).listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}/`);
+});

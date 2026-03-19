@@ -2,15 +2,11 @@
   "name": "thread-website",
   "type": "module",
   "version": "1.0.0",
-  "main": "test.js",
   "scripts": {
     "dev": "node local-dev.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "express": "^4.22.1"
-  }
+  "description": ""
 }
