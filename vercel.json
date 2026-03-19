@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/reddit/(.*)",
+      "destination": "/api/index.js"
+    }
+  ]
+}
